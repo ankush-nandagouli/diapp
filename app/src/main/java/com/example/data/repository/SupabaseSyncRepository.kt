@@ -248,7 +248,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<PartnerEntity>()
@@ -395,7 +398,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<ProjectEntity>()
@@ -511,7 +517,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<ProjectComponentEntity>()
@@ -604,7 +613,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<DailyReportEntity>()
@@ -703,7 +715,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<CashFlowEntity>()
@@ -806,7 +821,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<ActivityAlertEntity>()
@@ -1034,7 +1052,10 @@ class SupabaseSyncRepository(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return emptyList()
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string().orEmpty()
+                throw IllegalStateException("Supabase request failed: HTTP \${response.code} \${response.message}: \${errorBody}")
+            }
             val body = response.body?.string() ?: return emptyList()
             val array = JSONArray(body)
             val list = mutableListOf<SystemLogEntry>()
