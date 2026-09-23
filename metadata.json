@@ -1,0 +1,6 @@
+{
+  "name": "Dakshyam Innovations",
+  "description": "Real-time business management architecture and app for Dakshyam Innovations partners",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

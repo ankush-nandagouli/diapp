@@ -1,0 +1,28 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center Safe Zone 66dp (canvas 108dp): X from 21 to 87, Y from 21 to 87 -->
+    <!-- Geometric 'D' with growth node elements -->
+    <path
+        android:pathData="M34,28 L56,28 C69.25,28 78,36.75 78,54 C78,71.25 69.25,80 56,80 L34,80 Z M44,38 L44,70 L54,70 C62.5,70 68,64 68,54 C68,44 62.5,38 54,38 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="34"
+                android:startY="28"
+                android:endX="78"
+                android:endY="80"
+                android:type="linear">
+                <item android:color="#38BDF8" android:offset="0.0" />
+                <item android:color="#FFFFFF" android:offset="0.5" />
+                <item android:color="#2DD4BF" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Innovation Node Dot -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M54,49 A5,5 0 1,0 54,59 A5,5 0 1,0 54,49 Z" />
+</vector>
