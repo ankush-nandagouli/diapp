@@ -187,6 +187,17 @@ class DakshyamViewModel(
     }
 
     init {
+        viewModelScope.launch {
+            authRepository.partnerAccessState.collect { state ->
+                if (state is PartnerAccessState.Authorized) {
+                    _activePartner.value = state.partner
+                    _isUserLoggedIn.value = true
+                } else if (state is PartnerAccessState.Unauthenticated) {
+                    _isUserLoggedIn.value = false
+                }
+            }
+        }
+
         // Automatically update active partner details when partner list refreshes
         viewModelScope.launch {
             partners.collect { list ->
