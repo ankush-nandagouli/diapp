@@ -98,20 +98,20 @@ class DakshyamRepository(
     suspend fun savePartner(partner: PartnerEntity): Long {
         val targetId = if (partner.id > 0) partner.id else System.currentTimeMillis()
         val toSave = partner.copy(id = targetId)
+        val result = supabaseSyncRepository.syncPartnerToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for partner." }
+
         val current = _partners.value.toMutableList()
         val idx = current.indexOfFirst { it.id == targetId }
         if (idx >= 0) current[idx] = toSave else current.add(toSave)
         _partners.value = current
 
-        supabaseSyncRepository.syncPartnerToRemote(toSave)
-        addAlert(
-            ActivityAlertEntity(
-                id = System.currentTimeMillis() + 1,
-                title = if (partner.id == 0L) "New Partner Registered" else "Partner Profile Updated",
-                description = "${toSave.name} (${toSave.role}) - Capital ₹${toSave.capitalContributed}",
-                category = "PARTNER"
-            )
-        )
+        addAlert(ActivityAlertEntity(
+            id = System.currentTimeMillis() + 1,
+            title = if (partner.id == 0L) "New Partner Registered" else "Partner Profile Updated",
+            description = "${toSave.name} (${toSave.role}) - Capital ₹${toSave.capitalContributed}",
+            category = "PARTNER"
+        ))
         return targetId
     }
 
@@ -146,32 +146,34 @@ class DakshyamRepository(
     suspend fun addTransaction(tx: CashFlowEntity): Long {
         val targetId = if (tx.id > 0) tx.id else System.currentTimeMillis()
         val toSave = tx.copy(id = targetId)
+        val result = supabaseSyncRepository.syncCashFlowToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for transaction." }
         _transactions.value = listOf(toSave) + _transactions.value.filter { it.id != targetId }
-        supabaseSyncRepository.syncCashFlowToRemote(toSave)
 
         val typeLabel = when (tx.type) {
             "EXPENSE" -> "Expense Recorded"
             "CAPITAL_INJECTION" -> "Capital Injected"
             else -> "Payment Received"
         }
-        addAlert(
-            ActivityAlertEntity(
-                id = System.currentTimeMillis() + 2,
-                title = typeLabel,
-                description = "₹${tx.amount} for '${tx.description}' by ${tx.paidByPartnerName}",
-                category = "FINANCE"
-            )
-        )
+        addAlert(ActivityAlertEntity(
+            id = System.currentTimeMillis() + 2,
+            title = typeLabel,
+            description = "₹${tx.amount} for '${tx.description}' by ${tx.paidByPartnerName}",
+            category = "FINANCE"
+        ))
         return targetId
     }
 
     suspend fun saveTransactionDirect(tx: CashFlowEntity): Long {
         val targetId = if (tx.id > 0) tx.id else System.currentTimeMillis()
         val toSave = tx.copy(id = targetId)
+        val result = supabaseSyncRepository.syncCashFlowToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for transaction." }
         _transactions.value = listOf(toSave) + _transactions.value.filter { it.id != targetId }
-        supabaseSyncRepository.syncCashFlowToRemote(toSave)
         return targetId
     }
+
+
 
     suspend fun deleteTransaction(tx: CashFlowEntity) {
         _transactions.value = _transactions.value.filter { it.id != tx.id }
@@ -184,13 +186,16 @@ class DakshyamRepository(
     suspend fun saveProject(project: ProjectEntity): Long {
         val targetId = if (project.id > 0) project.id else System.currentTimeMillis()
         val toSave = project.copy(id = targetId)
+        val result = supabaseSyncRepository.syncProjectToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for project." }
         val current = _projects.value.toMutableList()
         val idx = current.indexOfFirst { it.id == targetId }
         if (idx >= 0) current[idx] = toSave else current.add(toSave)
         _projects.value = current
-        supabaseSyncRepository.syncProjectToRemote(toSave)
         return targetId
     }
+
+    
 
     suspend fun createProjectWithComponents(
         project: ProjectEntity,
@@ -241,13 +246,16 @@ class DakshyamRepository(
     suspend fun addComponent(component: ProjectComponentEntity): Long {
         val compId = if (component.id > 0) component.id else System.currentTimeMillis()
         val toSave = component.copy(id = compId)
+        val result = supabaseSyncRepository.syncComponentToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for component." }
         val current = _components.value.toMutableList()
         val idx = current.indexOfFirst { it.id == compId }
         if (idx >= 0) current[idx] = toSave else current.add(toSave)
         _components.value = current
-        supabaseSyncRepository.syncComponentToRemote(toSave)
         return compId
     }
+
+
 
     suspend fun saveComponent(component: ProjectComponentEntity): Long {
         return addComponent(component)
@@ -268,27 +276,30 @@ class DakshyamRepository(
     suspend fun addDailyReport(report: DailyReportEntity): Long {
         val repId = if (report.id > 0) report.id else System.currentTimeMillis()
         val toSave = report.copy(id = repId)
+        val result = supabaseSyncRepository.syncDailyReportToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for daily report." }
         _dailyReports.value = listOf(toSave) + _dailyReports.value.filter { it.id != repId }
-        supabaseSyncRepository.syncDailyReportToRemote(toSave)
-
-        addAlert(
-            ActivityAlertEntity(
-                id = System.currentTimeMillis() + 5,
-                title = "Daily Progress Logged",
-                description = "${report.reportedByPartner} logged report for ${report.projectTitle}",
-                category = "REPORT"
-            )
-        )
+        addAlert(ActivityAlertEntity(
+            id = System.currentTimeMillis() + 5,
+            title = "Daily Progress Logged",
+            description = "${report.reportedByPartner} logged report for ${report.projectTitle}",
+            category = "REPORT"
+        ))
         return repId
     }
+
+
 
     suspend fun saveDailyReportDirect(report: DailyReportEntity): Long {
         val repId = if (report.id > 0) report.id else System.currentTimeMillis()
         val toSave = report.copy(id = repId)
+        val result = supabaseSyncRepository.syncDailyReportToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for daily report." }
         _dailyReports.value = listOf(toSave) + _dailyReports.value.filter { it.id != repId }
-        supabaseSyncRepository.syncDailyReportToRemote(toSave)
         return repId
     }
+
+
 
     suspend fun deleteDailyReport(report: DailyReportEntity) {
         _dailyReports.value = _dailyReports.value.filter { it.id != report.id }
@@ -303,10 +314,13 @@ class DakshyamRepository(
     suspend fun addAlert(alert: ActivityAlertEntity): Long {
         val alertId = if (alert.id > 0) alert.id else System.currentTimeMillis()
         val toSave = alert.copy(id = alertId)
+        val result = supabaseSyncRepository.syncAlertToRemote(toSave)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for alert." }
         _alerts.value = listOf(toSave) + _alerts.value.filter { it.id != alertId }
-        supabaseSyncRepository.syncAlertToRemote(toSave)
         return alertId
     }
+
+
 
     suspend fun markAlertRead(alertId: Long) {
         _alerts.value = _alerts.value.map { if (it.id == alertId) it.copy(isRead = true) else it }
@@ -329,17 +343,18 @@ class DakshyamRepository(
     // COMPANY PROFILE & BUSINESS IDENTITY
     // -------------------------------------------------------------
     suspend fun saveCompanyProfile(profile: CompanyProfileEntity) {
+        val result = supabaseSyncRepository.syncCompanyProfileToRemote(profile)
+        check(result.isSuccess) { result.exceptionOrNull()?.message ?: "Cloud save failed for company profile." }
         _companyProfile.value = profile
-        supabaseSyncRepository.syncCompanyProfileToRemote(profile)
-        addAlert(
-            ActivityAlertEntity(
-                id = System.currentTimeMillis() + 6,
-                title = "Business Profile Updated",
-                description = "${profile.companyName} details modified by ${profile.updatedByPartner}",
-                category = "PARTNER"
-            )
-        )
+        addAlert(ActivityAlertEntity(
+            id = System.currentTimeMillis() + 6,
+            title = "Business Profile Updated",
+            description = "${profile.companyName} details modified by ${profile.updatedByPartner}",
+            category = "PARTNER"
+        ))
     }
+
+
 
     suspend fun refreshFromCloud() = withContext(Dispatchers.IO) {
         try {
