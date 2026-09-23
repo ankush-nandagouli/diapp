@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Result wrapper for authentication operations.
@@ -75,11 +78,54 @@ class AuthenticationRepository(
         )
     }
 
+    private val sessionPrefs = context.getSharedPreferences("dakshyam_auth_session", Context.MODE_PRIVATE)
+    private val authScope = CoroutineScope(SupervisorJob() + ioDispatcher)
+
     private val _currentUser = MutableStateFlow<AppUser?>(null)
     val authStateFlow: Flow<AppUser?> = _currentUser.asStateFlow()
 
     private val _partnerAccessState = MutableStateFlow<PartnerAccessState>(PartnerAccessState.Unauthenticated)
     val partnerAccessState: StateFlow<PartnerAccessState> = _partnerAccessState.asStateFlow()
+
+    init {
+        restorePersistedSession()
+    }
+
+    private fun restorePersistedSession() {
+        val email = sessionPrefs.getString("email", null) ?: return
+        authScope.launch {
+            val partner = supabaseSyncRepository.findPartnerByEmail(email) ?: run {
+                clearPersistedSession()
+                return@launch
+            }
+            if (!partner.isActive) {
+                clearPersistedSession()
+                return@launch
+            }
+            val user = AppUser(
+                uid = "user_${partner.id}",
+                email = partner.email,
+                displayName = partner.name,
+                phoneNumber = partner.phone
+            )
+            _currentUser.value = user
+            _partnerAccessState.value = PartnerAccessState.Authorized(
+                user = user,
+                partner = partner,
+                isManagingPartner = partner.role.contains("Managing", ignoreCase = true)
+            )
+        }
+    }
+
+    private fun persistSession(user: AppUser) {
+        sessionPrefs.edit()
+            .putString("email", user.email)
+            .apply()
+    }
+
+    private fun clearPersistedSession() {
+        sessionPrefs.edit().clear().apply()
+    }
 
     suspend fun isPartnerAuthorized(email: String): Boolean = withContext(ioDispatcher) {
         val cleanEmail = email.trim().lowercase()
@@ -117,6 +163,7 @@ class AuthenticationRepository(
 
         val isManaging = partner.role.contains("Managing", ignoreCase = true)
         _currentUser.value = user
+        persistSession(user)
         _partnerAccessState.value = PartnerAccessState.Authorized(
             user = user,
             partner = partner,
@@ -233,6 +280,7 @@ class AuthenticationRepository(
         val current = _partnerAccessState.value
         val partnerName = if (current is PartnerAccessState.Authorized) current.partner.name else "Partner"
         _currentUser.value = null
+        clearPersistedSession()
         _partnerAccessState.value = PartnerAccessState.Unauthenticated
 
         dakshyamRepository.addAlert(
